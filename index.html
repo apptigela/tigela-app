@@ -1438,28 +1438,15 @@ async function guardarPassword() {
       return;
     }
 
-    // Fazer login com as novas credenciais
-    const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({
-      email: emailCriarPass,
-      password: pass1
-    });
-
-    if (loginError) {
-      erro.textContent = 'Erro ao entrar. Tenta novamente.';
-      return;
-    }
-
     // Mostrar sucesso
     document.getElementById('criar-pass-sucesso').style.display = 'flex';
     document.querySelector('.criar-pass-form > .login-field').style.display = 'none';
     document.querySelector('.criar-pass-form > .login-field:last-of-type').style.display = 'none';
     document.querySelector('.criar-pass-form > button').style.display = 'none';
 
-    // Entrar automaticamente após 2 segundos
+    // Aguardar 2 segundos e ir para login
     setTimeout(() => {
-      user = { email: emailCriarPass, id: loginData.user.id };
-      localStorage.setItem('tigela_u', JSON.stringify(user));
-      mostrar('ecra-home');
+      mostrar('ecra-login');
     }, 2000);
 
   } catch(e) {
