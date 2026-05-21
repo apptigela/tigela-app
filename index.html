@@ -1417,15 +1417,41 @@ async function guardarPassword() {
   }
 
   try {
-    const res = await fetch(
-      `${SURL}/rest/v1/utilizadores?email=eq.${encodeURIComponent(emailCriarPass)}`,
+    // Primeiro buscar o utilizador pelo email para obter o UUID
+    const resUser = await fetch(
+      `${SURL}/auth/v1/admin/users?email=${encodeURIComponent(emailCriarPass)}`,
       {
-        method: 'PATCH',
+        method: 'GET',
+        headers: {
+          'apikey': SKEY,
+          'Authorization': `Bearer ${SKEY}`
+        }
+      }
+    );
+
+    if (!resUser.ok) {
+      erro.textContent = 'Erro ao guardar. Tenta novamente.';
+      return;
+    }
+
+    const userData = await resUser.json();
+    const users = userData.users || [];
+    if (users.length === 0) {
+      erro.textContent = 'Utilizador não encontrado. Contacta o suporte.';
+      return;
+    }
+
+    const userId = users[0].id;
+
+    // Agora actualizar a password via Supabase Auth Admin API
+    const res = await fetch(
+      `${SURL}/auth/v1/admin/users/${userId}`,
+      {
+        method: 'PUT',
         headers: {
           'apikey': SKEY,
           'Authorization': `Bearer ${SKEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ password: pass1 })
       }
@@ -1436,20 +1462,25 @@ async function guardarPassword() {
       return;
     }
 
-    const lista = await res.json();
-    const data = lista[0];
-
     // Mostrar sucesso
     document.getElementById('criar-pass-sucesso').style.display = 'flex';
     document.querySelector('.criar-pass-form > .login-field').style.display = 'none';
     document.querySelector('.criar-pass-form > .login-field:last-of-type').style.display = 'none';
     document.querySelector('.criar-pass-form > button').style.display = 'none';
 
-    // Entrar automaticamente após 2 segundos
-    setTimeout(() => {
-      user = data;
-      localStorage.setItem('tigela_u', JSON.stringify(data));
-      mostrar('ecra-home');
+    // Entrar automaticamente após 2 segundos usando as credenciais
+    setTimeout(async () => {
+      const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({
+        email: emailCriarPass,
+        password: pass1
+      });
+      if (!loginError && loginData.user) {
+        user = { email: emailCriarPass, id: loginData.user.id };
+        localStorage.setItem('tigela_u', JSON.stringify(user));
+        mostrar('ecra-home');
+      } else {
+        mostrar('ecra-login');
+      }
     }, 2000);
 
   } catch(e) {
