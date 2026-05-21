@@ -1444,10 +1444,20 @@ async function guardarPassword() {
     document.querySelector('.criar-pass-form > .login-field:last-of-type').style.display = 'none';
     document.querySelector('.criar-pass-form > button').style.display = 'none';
 
-    // Aguardar 2 segundos e ir para login
-    setTimeout(() => {
-      mostrar('ecra-login');
-    }, 2000);
+    // Aguardar 3 segundos para o Supabase processar e depois fazer login automático
+    setTimeout(async () => {
+      const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({
+        email: emailCriarPass,
+        password: pass1
+      });
+      if (!loginError && loginData.user) {
+        user = { email: emailCriarPass, id: loginData.user.id };
+        localStorage.setItem('tigela_u', JSON.stringify(user));
+        mostrar('ecra-home');
+      } else {
+        mostrar('ecra-login');
+      }
+    }, 3000);
 
   } catch(e) {
     erro.textContent = 'Erro de ligação. Tenta novamente.';
