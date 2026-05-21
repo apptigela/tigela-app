@@ -1438,13 +1438,13 @@ async function guardarPassword() {
       return;
     }
 
-    // Mostrar sucesso
+    // Esconder campos e mostrar sucesso
+    document.getElementById('criar-pass-input1').closest('.login-field').style.display = 'none';
+    document.getElementById('criar-pass-input2').closest('.login-field').style.display = 'none';
+    document.querySelector('#ecra-criar-pass .login-btn').style.display = 'none';
     document.getElementById('criar-pass-sucesso').style.display = 'flex';
-    document.querySelector('.criar-pass-form > .login-field').style.display = 'none';
-    document.querySelector('.criar-pass-form > .login-field:last-of-type').style.display = 'none';
-    document.querySelector('.criar-pass-form > button').style.display = 'none';
 
-    // Aguardar 3 segundos para o Supabase processar e depois fazer login automático
+    // Aguardar 3 segundos e fazer login automático
     setTimeout(async () => {
       const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({
         email: emailCriarPass,
@@ -1453,6 +1453,13 @@ async function guardarPassword() {
       if (!loginError && loginData.user) {
         user = { email: emailCriarPass, id: loginData.user.id };
         localStorage.setItem('tigela_u', JSON.stringify(user));
+        // Repor ecrã para a próxima utilização
+        document.getElementById('criar-pass-input1').closest('.login-field').style.display = '';
+        document.getElementById('criar-pass-input2').closest('.login-field').style.display = '';
+        document.querySelector('#ecra-criar-pass .login-btn').style.display = '';
+        document.getElementById('criar-pass-sucesso').style.display = 'none';
+        document.getElementById('criar-pass-input1').value = '';
+        document.getElementById('criar-pass-input2').value = '';
         mostrar('ecra-home');
       } else {
         mostrar('ecra-login');
