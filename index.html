@@ -1418,18 +1418,27 @@ async function guardarPassword() {
   }
 
   try {
-    // Usar signUp — se o utilizador já existe no Auth, actualiza a password
-    const { data, error } = await sb.auth.signUp({
-      email: emailCriarPass,
-      password: pass1
-    });
+    // Chamar Edge Function para definir password com permissões admin
+    const res = await fetch(
+      `${SURL}/functions/v1/definir-password`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SKEY}`
+        },
+        body: JSON.stringify({ email: emailCriarPass, password: pass1 })
+      }
+    );
 
-    if (error && error.message !== 'User already registered') {
+    const result = await res.json();
+
+    if (!res.ok || result.error) {
       erro.textContent = 'Erro ao guardar. Tenta novamente.';
       return;
     }
 
-    // Se já existe, fazer login directamente com a nova password
+    // Fazer login com as novas credenciais
     const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({
       email: emailCriarPass,
       password: pass1
